@@ -1,0 +1,164 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>Hello APP</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css" />
+    <link rel="stylesheet" type="text/css" href="../css/swiper.min.css" />
+    <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    </style>
+</head>
+<body id="tvbox" onclick="link_setting()">
+  <!-- start loading -->
+  <div id="loading"><div class="loader"></div></div>
+  <!-- end loading -->
+  <div class="swiper-container">
+    <div class="swiper-wrapper" id='content'></div>
+    <!-- Add Pagination -->
+    <div class="swiper-pagination"></div>
+  </div>
+  <div id="music" style="position:absolute;"></div>
+</body>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/swiper.min.js"></script>
+<script type="text/javascript">
+    // 载入完毕
+    apiready = function(){
+      // 判断网络连接
+      console.log("网络状态:"+ api.connectionType);
+      // 开机自动更新内容
+      initApp();
+      // 电视遥控器
+      init_tvcontrol();
+    };
+
+    // 初始化
+    function initApp(){
+      // 判断网络状态
+      if( api.connectionType == 'none'){
+        api.confirm({
+            title: '网络连接失败',
+            msg: '请查看WIFI连接情况',
+            buttons: ['重试', '退出']
+        }, function(ret, err) {
+            var index = ret.buttonIndex;
+            if( index == 1){
+              window.location.reload();
+            }else if( index == 2){
+              // 退出APP
+              api.closeWidget({
+                  id: 'A6014823253355',
+                  retData: {
+                      name: 'closeWidget'
+                  },
+                  animation: {
+                      type: 'flip',
+                      subType: 'from_bottom',
+                      duration: 500
+                  }
+              });
+            }
+        });
+    }else{
+      get_content();
+    }
+  }
+
+  // 获取服务器内容
+  function get_content(){
+      var appkey = 'b3fd0aedc0fa57424ec654baa9114c8d';
+      var api_url = 'http://www.6188.net.cn/app/index.php/?m=api&c=app&a=index&appkey='+ appkey;
+      // 提交JSON数据
+      api.ajax({
+          url: api_url,
+          method: 'get',
+          headers: {'Content-Type': 'application/json;charset=utf-8'},
+          data: {}
+      }, function(ret, err) {
+          $api.remove($api.byId('loading')); // 删除loading
+          if (ret) {
+              if( ret.status == 1){
+                var tpl = creat_content( ret.data.content );
+                $api.byId('content').innerHTML = tpl;
+                // swiper 列出公司名称
+                var mySwiper = new Swiper('.swiper-container', {
+                  mode: 'horizontal',
+                  effect : ret.data.config.swiper_effect,
+                  direction : ret.data.config.swiper_direction,
+                  loop: true,
+                  pagination: {
+                    el: '.swiper-pagination',
+                  },
+                  autoplay: {
+                    delay: ret.data.config.swiper_delay,
+                    stopOnLastSlide: false,
+                    disableOnInteraction: false,
+                  },
+                });
+
+                // 背景音乐
+                if( ret.data.config.music != '' ){
+                  var music = '<audio autoplay="autoplay" loop="loop"><source src="'+ ret.data.config.music +'" type="audio/mpeg"></audio>';
+                  $api.byId('music').innerHTML = music;
+                }
+
+                // 设置样式
+                $api.append($api.byId('content'), ret.data.skin)
+
+              }else if( ret.status == 0){
+                api.alert({ msg: ret.msg });
+              }
+          } else {
+              api.alert( {msg:JSON.stringify(err.msg)} );
+          }
+      });
+    }
+
+
+    // 拼合内容
+   function creat_content( data ){
+     var tpl = '';
+     var strl = data.length; // 数组长度
+     var tt = 10;    // 每页显示item数量
+     var ii = 0;
+     for(var p = 0; p < strl; p++){
+         ii++;
+         if(p%tt==0){
+             tpl += '<div class="swiper-slide">';
+             tpl += '<div class="item"><div class="item-bg"><div class="number">'  + (p+1)  + '</div><div class="name-group">';
+             if( data[p].cn_name.trim() == ''){
+                 tpl += '<div class="en-name empty-cn-name">' + data[p].en_name  +'</div>';
+             }else{
+                 tpl += '<div class="cn-name">' + data[p].cn_name  +'</div><div class="en-name">' + data[p].en_name  +'</div>';
+             }
+             tpl += '</div></div></div>';
+         }else{
+             tpl += '<div class="item"><div class="item-bg"><div class="number">'  + (p+1)  + '</div><div class="name-group">';
+             if( data[p].cn_name.trim() == ''){
+                 tpl += '<div class="en-name empty-cn-name">' + data[p].en_name  +'</div>';
+             }else{
+                 tpl += '<div class="cn-name">' + data[p].cn_name  +'</div><div class="en-name">' + data[p].en_name  +'</div>';
+             }
+             tpl += '</div></div></div>';
+         }
+         if(ii==tt){
+             tpl += '</div>';
+             ii=0;
+         }
+     }
+     if(strl%tt!=0){
+      tpl += '</div>';
+     }
+     return tpl;
+   }
+
+</script>
+</html>

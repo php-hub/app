@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>nuv.com.cn</title>
+    <link rel="stylesheet" type="text/css" href="./css/api.css" />
+    <style>
+      html,body{ width:100%; height: 100%;}
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <div id="main" class="flex-con">
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="./script/api.js"></script>
+<script type="text/javascript">
+    apiready = function(){
+
+      // 设置横屏
+      api.setScreenOrientation({
+          orientation:'auto_landscape'
+      });
+
+      // 设置全屏
+      api.setFullScreen({ fullScreen:true });
+
+
+      // 打开内容窗口
+      api.openFrame({
+          name: 'main',
+          url: 'html/main.html',
+          bounces: false,
+          rect: {
+              x: 0,
+              y: 0,
+              w: 'auto',
+              h: 'auto',
+          }
+      });
+
+    };
+
+    // 授权码
+    // tvcontrol : zpkjlq52039hl4g
+</script>
+</html>
